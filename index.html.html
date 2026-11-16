@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>친환경 신소재 추천 및 탄소 발자국 계산기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .footprint-container {
+            display: inline-block;
+            margin: 0 4px;
+            opacity: 0;
+            animation: appear 0.2s forwards;
+            font-size: 2rem;
+        }
+        @keyframes appear {
+            to { opacity: 1; transform: translateY(-5px); }
+        }
+        .left-foot {
+            transform: scaleX(-1) translateY(8px);
+        }
+        .right-foot {
+            transform: translateY(-8px);
+        }
+    </style>
+</head>
+<body class="bg-emerald-50 text-gray-800 font-sans min-h-screen p-4 flex flex-col items-center justify-center">
+    <div class="max-w-2xl w-full bg-white rounded-3xl shadow-xl p-8 border-t-8 border-emerald-500 transition-all">
+        <h1 class="text-3xl md:text-4xl font-extrabold text-emerald-700 mb-2 text-center tracking-tight">🌱 탄소 발자국 계산기</h1>
+        <p class="text-gray-500 text-center mb-10 font-medium">하루에 무심코 사용하는 플라스틱 컵 개수를 입력해보세요.</p>
+
+        <div class="flex flex-col md:flex-row gap-4 mb-10">
+            <input type="number" id="plastic-cups" class="flex-1 border-2 border-emerald-200 rounded-xl p-4 text-lg focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all placeholder-gray-400" placeholder="일일 플라스틱 컵 사용량 (예: 3)" min="0">
+            <button onclick="calculateFootprint()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:shadow-emerald-200 transition duration-300 transform hover:-translate-y-1">계산하기</button>
+        </div>
+
+        <div id="result-section" class="hidden flex-col items-center mb-10 p-6 bg-gray-50 rounded-2xl border border-gray-100">
+            <h2 class="text-xl font-bold text-gray-600 mb-2">당신의 연간 예상 탄소 배출량</h2>
+            <div class="text-5xl font-black text-emerald-600 mb-6 flex items-end gap-2">
+                <span id="co2-result">0</span> 
+                <span class="text-2xl text-gray-500 mb-1">kg CO₂</span>
+            </div>
+            <div id="footprints-container" class="flex flex-wrap justify-center min-h-[60px] max-w-lg"></div>
+            <p id="footprint-desc" class="text-sm text-gray-400 mt-4 hidden">* 발자국 1개 = 탄소 10kg (최대 100개 표시)</p>
+        </div>
+
+        <div class="bg-gradient-to-br from-emerald-100 to-green-50 p-6 md:p-8 rounded-2xl border border-emerald-200 shadow-inner">
+            <h3 class="text-xl font-extrabold text-emerald-800 mb-3 flex items-center gap-2">
+                <span>🧪</span> 화학공학 Insight : 플라스틱의 대안
+            </h3>
+            <p class="text-gray-700 leading-relaxed mb-5 font-medium">
+                석유계 플라스틱은 자연 분해에 수백 년이 걸립니다. 화학공학자들은 환경 문제를 해결하기 위해 <strong>생분해성 고분자(PLA, PBAT 등)</strong>를 설계하고 연구합니다.
+            </p>
+            <div class="space-y-4">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-emerald-100">
+                    <h4 class="font-bold text-emerald-700 mb-1">1. PLA (Poly Lactic Acid)</h4>
+                    <p class="text-sm text-gray-600">옥수수 전분 등 식물성 자원에서 추출한 젖산을 중합하여 만드는 대표적인 친환경 바이오 플라스틱입니다.</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-emerald-100">
+                    <h4 class="font-bold text-emerald-700 mb-1">2. 분해 메커니즘 (가수분해)</h4>
+                    <p class="text-sm text-gray-600">특정 온도와 미생물 조건에서 고분자 사슬을 이루는 <strong>에스테르 결합(Ester bond)</strong>이 끊어지며, 최종적으로 물(H₂O)과 이산화탄소(CO₂)로 완전히 분해됩니다.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function calculateFootprint() {
+            const cupsInput = document.getElementById('plastic-cups').value;
+            if (!cupsInput || cupsInput < 0) return;
+
+            // 플라스틱 컵 1개당 약 15g CO2 발생, 1년(365일) 기준 계산
+            // 임의로 시각적 효과를 위해 컵 1개당 연간 약 11kg(11000g)으로 산정 (조정 가능)
+            const co2PerYear = Math.round(cupsInput * 11); 
+            
+            const resultSection = document.getElementById('result-section');
+            const co2Result = document.getElementById('co2-result');
+            const footprintsContainer = document.getElementById('footprints-container');
+            const footprintDesc = document.getElementById('footprint-desc');
+            
+            resultSection.classList.remove('hidden');
+            resultSection.classList.add('flex');
+            footprintsContainer.innerHTML = '';
+            footprintDesc.classList.add('hidden');
+            
+            // 숫자 카운트업 애니메이션
+            let currentNum = 0;
+            const duration = 1000; // 1초
+            const interval = 20;
+            const increment = Math.max(1, Math.floor(co2PerYear / (duration / interval)));
+            
+            const counter = setInterval(() => {
+                currentNum += increment;
+                if (currentNum >= co2PerYear) {
+                    currentNum = co2PerYear;
+                    clearInterval(counter);
+                    drawFootprints(co2PerYear);
+                }
+                co2Result.innerText = currentNum;
+            }, interval);
+
+            function drawFootprints(co2) {
+                const footprintCount = Math.min(Math.floor(co2 / 10), 100); 
+                
+                if(footprintCount > 0) footprintDesc.classList.remove('hidden');
+
+                for (let i = 0; i < footprintCount; i++) {
+                    setTimeout(() => {
+                        const wrapper = document.createElement('div');
+                        wrapper.classList.add('footprint-container');
+                        
+                        const foot = document.createElement('span');
+                        foot.innerText = '👣';
+                        
+                        if (i % 2 === 0) {
+                            foot.classList.add('left-foot');
+                            wrapper.style.transform = "scaleX(-1)";
+                        } else {
+                            foot.classList.add('right-foot');
+                        }
+                        
+                        wrapper.appendChild(foot);
+                        footprintsContainer.appendChild(wrapper);
+                    }, i * 150); // 0.15초 간격으로 타박타박 걷는 효과
+                }
+            }
+        }
+    </script>
+</body>
+</html>
